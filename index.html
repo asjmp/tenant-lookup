@@ -490,8 +490,8 @@
 
   function getMsalInstance() {
     const clientId = 'bf1f0edd-ceb1-457e-8042-428481a2fca8';
-    if (!clientId || clientId === 'bf1f0edd-ceb1-457e-8042-428481a2fca8') {
-      showError('Please enter a valid Azure App (Client) ID before signing in.');
+    if (!clientId) {
+      showError('Client ID is missing. Please contact Manage Protect.');
       return null;
     }
     const config = {
