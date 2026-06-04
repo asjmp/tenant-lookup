@@ -426,18 +426,18 @@
   <h1>Microsoft Tenant Lookup</h1>
   <p class="subtitle">Sign in with your Microsoft 365 account to retrieve your tenant details instantly.</p>
 
-  <div class="highlight-box">
-    ⚙️ &nbsp;Replace <strong>YOUR_APP_CLIENT_ID</strong> in the script below with your Azure App (Client) ID before distributing.
+  <div class="highlight-box" style="display:none">
+    ⚙️ &nbsp;Replace <strong>bf1f0edd-ceb1-457e-8042-428481a2fca8</strong> in the script below with your Azure App (Client) ID before distributing.
   </div>
 
-  <div class="config-row">
+  <div class="config-row" style="display:none">
     <label class="config-label" for="clientIdInput">Azure App (Client) ID</label>
     <input
       class="config-input"
       id="clientIdInput"
       type="text"
       placeholder="e.g. xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-      value="YOUR_APP_CLIENT_ID"
+      value="bf1f0edd-ceb1-457e-8042-428481a2fca8"
     />
   </div>
 
@@ -489,8 +489,8 @@
   let msalInstance = null;
 
   function getMsalInstance() {
-    const clientId = document.getElementById('clientIdInput').value.trim();
-    if (!clientId || clientId === 'YOUR_APP_CLIENT_ID') {
+    const clientId = 'bf1f0edd-ceb1-457e-8042-428481a2fca8';
+    if (!clientId || clientId === 'bf1f0edd-ceb1-457e-8042-428481a2fca8') {
       showError('Please enter a valid Azure App (Client) ID before signing in.');
       return null;
     }
