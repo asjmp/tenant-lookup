@@ -505,30 +505,63 @@
     return new msal.PublicClientApplication(config);
   }
 
+  const CLIENT_ID = 'bf1f0edd-ceb1-457e-8042-428481a2fca8';
+  const SCOPES = ['User.Read', 'Organization.Read.All'];
+
+  function buildMsal() {
+    return new msal.PublicClientApplication({
+      auth: {
+        clientId: CLIENT_ID,
+        authority: 'https://login.microsoftonline.com/organizations',
+        redirectUri: window.location.origin + window.location.pathname,
+        navigateToLoginRequestUrl: true,
+      },
+      cache: { cacheLocation: 'sessionStorage', storeAuthStateInCookie: true }
+    });
+  }
+
+  // Handle redirect response on page load
+  window.addEventListener('load', async () => {
+    try {
+      const instance = buildMsal();
+      await instance.initialize();
+      const result = await instance.handleRedirectPromise();
+      if (result && result.account) {
+        msalInstance = instance;
+        setLoading(true);
+        await fetchOrgData(instance, result.account);
+      }
+    } catch (e) {
+      showError('Sign-in error: ' + (e.message || e.errorCode || 'Unknown'));
+      setLoading(false);
+    }
+  });
+
   async function signIn() {
     hideError();
-    msalInstance = getMsalInstance();
-    if (!msalInstance) return;
-
     setLoading(true);
     try {
-      await msalInstance.initialize();
-
-      const loginRequest = {
-        scopes: ['User.Read', 'Organization.Read.All'],
+      const instance = buildMsal();
+      msalInstance = instance;
+      await instance.initialize();
+      await instance.loginRedirect({
+        scopes: SCOPES,
         prompt: 'select_account'
-      };
+      });
+      // Page will redirect — execution stops here
+    } catch (err) {
+      showError('Sign-in failed: ' + (err.message || err.errorCode || 'Unknown error'));
+      setLoading(false);
+    }
+  }
 
-      const loginResponse = await msalInstance.loginPopup(loginRequest);
-      const account = loginResponse.account;
-
-      // Get token for Graph API
-      const tokenResponse = await msalInstance.acquireTokenSilent({
-        scopes: ['Organization.Read.All'],
+  async function fetchOrgData(instance, account) {
+    try {
+      const tokenResponse = await instance.acquireTokenSilent({
+        scopes: SCOPES,
         account: account
       });
 
-      // Call Graph API
       const orgResponse = await fetch('https://graph.microsoft.com/v1.0/organization', {
         headers: { Authorization: `Bearer ${tokenResponse.accessToken}` }
       });
@@ -540,14 +573,10 @@
 
       const orgData = await orgResponse.json();
       const org = orgData.value && orgData.value[0];
-
       if (!org) throw new Error('No organisation data returned from Microsoft Graph.');
 
-      // Extract tenant ID from account or org
       const tenantId = org.id || account.tenantId;
       const companyName = org.displayName || '—';
-
-      // Find verified default domain
       const domains = org.verifiedDomains || [];
       const defaultDomain = domains.find(d => d.isDefault && d.type === 'Managed')
         || domains.find(d => d.isDefault)
@@ -555,13 +584,8 @@
       const primaryDomain = defaultDomain ? defaultDomain.name : '—';
 
       displayResults(tenantId, companyName, primaryDomain);
-
     } catch (err) {
-      if (err.errorCode === 'user_cancelled' || err.message?.includes('cancelled')) {
-        // User closed popup — silent fail
-      } else {
-        showError(`Sign-in failed: ${err.message || err.errorCode || 'Unknown error'}`);
-      }
+      showError('Failed to retrieve tenant data: ' + (err.message || 'Unknown error'));
     } finally {
       setLoading(false);
     }
