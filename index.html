@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Microsoft Tenant Lookup — Manage Protect</title>
-<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+<script type="text/javascript" src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -13,18 +13,15 @@
     --border: #1e2d45;
     --accent: #0078d4;
     --accent-bright: #2ea8ff;
-    --accent-glow: rgba(0,120,212,0.15);
     --text: #e8edf5;
     --text-muted: #6b7fa3;
     --success: #10b981;
-    --success-glow: rgba(16,185,129,0.12);
+    --success-glow: rgba(16,185,129,0.10);
     --error: #f87171;
     --mono: 'DM Mono', monospace;
     --sans: 'Syne', sans-serif;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
   body {
     background: var(--bg);
     color: var(--text);
@@ -38,8 +35,6 @@
     position: relative;
     overflow: hidden;
   }
-
-  /* Animated grid background */
   body::before {
     content: '';
     position: fixed;
@@ -51,395 +46,123 @@
     mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
     pointer-events: none;
   }
-
-  /* Glow orb */
   body::after {
     content: '';
     position: fixed;
-    width: 600px;
-    height: 600px;
+    width: 600px; height: 600px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(0,120,212,0.08) 0%, transparent 70%);
-    top: 50%;
-    left: 50%;
+    background: radial-gradient(circle, rgba(0,120,212,0.07) 0%, transparent 70%);
+    top: 50%; left: 50%;
     transform: translate(-50%, -50%);
     pointer-events: none;
     animation: pulse 6s ease-in-out infinite;
   }
-
   @keyframes pulse {
-    0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
-    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+    0%,100% { opacity:0.6; transform:translate(-50%,-50%) scale(1); }
+    50%      { opacity:1;   transform:translate(-50%,-50%) scale(1.08); }
   }
-
   .card {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    max-width: 520px;
+    position: relative; z-index: 1;
+    width: 100%; max-width: 520px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 16px;
     padding: 3rem 2.5rem;
     box-shadow: 0 0 0 1px rgba(255,255,255,0.03), 0 32px 64px rgba(0,0,0,0.5);
-    animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: slideUp 0.5s cubic-bezier(0.16,1,0.3,1) both;
   }
-
   @keyframes slideUp {
-    from { opacity: 0; transform: translateY(24px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity:0; transform:translateY(24px); }
+    to   { opacity:1; transform:translateY(0); }
   }
-
-  .logo-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 2rem;
-  }
-
+  .logo-row { display:flex; align-items:center; gap:10px; margin-bottom:2rem; }
   .logo-badge {
-    width: 36px;
-    height: 36px;
-    background: var(--accent);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    font-weight: 800;
-    color: white;
-    font-family: var(--sans);
-    letter-spacing: -1px;
-    flex-shrink: 0;
+    width:36px; height:36px;
+    background: var(--accent); border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px; font-weight:800; color:white;
+    font-family: var(--sans); letter-spacing:-1px; flex-shrink:0;
   }
-
-  .logo-name {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-muted);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  h1 {
-    font-size: 1.85rem;
-    font-weight: 800;
-    line-height: 1.15;
-    color: var(--text);
-    margin-bottom: 0.6rem;
-    letter-spacing: -0.02em;
-  }
-
-  .subtitle {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    line-height: 1.6;
-    margin-bottom: 2.5rem;
-    font-family: var(--mono);
-    font-weight: 400;
-  }
-
-  /* App ID input */
-  .config-row {
-    margin-bottom: 1.5rem;
-  }
-
-  .config-label {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: 6px;
-    display: block;
-  }
-
-  .config-input {
-    width: 100%;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 14px;
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 13px;
-    outline: none;
-    transition: border-color 0.2s, background 0.2s;
-  }
-
-  .config-input:focus {
-    border-color: var(--accent);
-    background: rgba(0,120,212,0.06);
-  }
-
-  .config-input::placeholder {
-    color: var(--text-muted);
-    opacity: 0.5;
-  }
-
-  /* Sign in button */
+  .logo-name { font-size:13px; font-weight:600; color:var(--text-muted); letter-spacing:0.08em; text-transform:uppercase; }
+  h1 { font-size:1.85rem; font-weight:800; line-height:1.15; color:var(--text); margin-bottom:0.6rem; letter-spacing:-0.02em; }
+  .subtitle { font-size:0.9rem; color:var(--text-muted); line-height:1.6; margin-bottom:2.5rem; font-family:var(--mono); }
   .btn-signin {
-    width: 100%;
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    padding: 14px 20px;
-    font-family: var(--sans);
-    font-size: 0.95rem;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
+    width:100%; background:var(--accent); color:white; border:none;
+    border-radius:10px; padding:14px 20px;
+    font-family:var(--sans); font-size:0.95rem; font-weight:700;
+    cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px;
     transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-    letter-spacing: 0.01em;
     box-shadow: 0 0 24px rgba(0,120,212,0.25);
-    position: relative;
-    overflow: hidden;
+    position:relative; overflow:hidden;
   }
-
   .btn-signin::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 60%);
-    pointer-events: none;
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 60%);
+    pointer-events:none;
   }
-
-  .btn-signin:hover {
-    background: #0086ef;
-    transform: translateY(-1px);
-    box-shadow: 0 0 36px rgba(0,120,212,0.4);
-  }
-
-  .btn-signin:active { transform: translateY(0); }
-
-  .btn-signin:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-  }
-
-  /* Microsoft icon */
-  .ms-icon {
-    width: 18px;
-    height: 18px;
-    flex-shrink: 0;
-  }
-
-  /* Spinner */
+  .btn-signin:hover { background:#0086ef; transform:translateY(-1px); box-shadow:0 0 36px rgba(0,120,212,0.4); }
+  .btn-signin:active { transform:translateY(0); }
+  .btn-signin:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+  .ms-icon { width:18px; height:18px; flex-shrink:0; }
   .spinner {
-    width: 16px;
-    height: 16px;
-    border: 2px solid rgba(255,255,255,0.3);
-    border-top-color: white;
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    flex-shrink: 0;
+    width:16px; height:16px;
+    border:2px solid rgba(255,255,255,0.3); border-top-color:white;
+    border-radius:50%; animation:spin 0.7s linear infinite; flex-shrink:0;
   }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* Results */
-  #results {
-    display: none;
-    margin-top: 2rem;
-    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-
-  .results-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 1rem;
-  }
-
-  .results-header .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--success);
-    box-shadow: 0 0 8px var(--success);
-    animation: blink 2s ease-in-out infinite;
-  }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-
-  .results-header span {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--success);
-  }
-
-  .result-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .result-item {
-    background: var(--success-glow);
-    border: 1px solid rgba(16,185,129,0.2);
-    border-radius: 10px;
-    padding: 14px 16px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .result-item::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: var(--success);
-    border-radius: 3px 0 0 3px;
-  }
-
-  .result-label {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--success);
-    margin-bottom: 4px;
-    opacity: 0.8;
-  }
-
-  .result-value {
-    font-family: var(--mono);
-    font-size: 0.9rem;
-    color: var(--text);
-    font-weight: 500;
-    word-break: break-all;
-  }
-
-  .copy-btn {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 6px;
-    color: var(--text-muted);
-    padding: 4px 8px;
-    font-size: 11px;
-    font-family: var(--mono);
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .copy-btn:hover {
-    background: rgba(255,255,255,0.1);
-    color: var(--text);
-  }
-
-  .copy-btn.copied {
-    color: var(--success);
-    border-color: rgba(16,185,129,0.3);
-  }
-
-  /* Error */
+  @keyframes spin { to { transform:rotate(360deg); } }
   #error-box {
-    display: none;
-    margin-top: 1.5rem;
-    background: rgba(248,113,113,0.08);
-    border: 1px solid rgba(248,113,113,0.25);
-    border-radius: 10px;
-    padding: 14px 16px;
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--error);
-    line-height: 1.5;
+    display:none; margin-top:1.5rem;
+    background:rgba(248,113,113,0.08); border:1px solid rgba(248,113,113,0.25);
+    border-radius:10px; padding:14px 16px;
+    font-family:var(--mono); font-size:13px; color:var(--error); line-height:1.5;
   }
-
-  /* Sign out */
-  #signout-row {
-    display: none;
-    margin-top: 1.5rem;
-    text-align: center;
+  #results { display:none; margin-top:2rem; animation:slideUp 0.4s cubic-bezier(0.16,1,0.3,1) both; }
+  .results-header { display:flex; align-items:center; gap:8px; margin-bottom:1rem; }
+  .results-header .dot {
+    width:8px; height:8px; border-radius:50%;
+    background:var(--success); box-shadow:0 0 8px var(--success);
+    animation:blink 2s ease-in-out infinite;
   }
-
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .results-header span { font-size:11px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--success); }
+  .result-grid { display:flex; flex-direction:column; gap:10px; }
+  .result-item {
+    background:var(--success-glow); border:1px solid rgba(16,185,129,0.2);
+    border-radius:10px; padding:14px 16px; position:relative; overflow:hidden;
+  }
+  .result-item::before {
+    content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+    background:var(--success); border-radius:3px 0 0 3px;
+  }
+  .result-label { font-size:10px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:var(--success); margin-bottom:4px; opacity:0.8; }
+  .result-value { font-family:var(--mono); font-size:0.9rem; color:var(--text); font-weight:500; word-break:break-all; padding-right:60px; }
+  .copy-btn {
+    position:absolute; right:12px; top:50%; transform:translateY(-50%);
+    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1);
+    border-radius:6px; color:var(--text-muted); padding:4px 8px;
+    font-size:11px; font-family:var(--mono); cursor:pointer; transition:all 0.15s;
+  }
+  .copy-btn:hover { background:rgba(255,255,255,0.1); color:var(--text); }
+  .copy-btn.copied { color:var(--success); border-color:rgba(16,185,129,0.3); }
+  #signout-row { display:none; margin-top:1.5rem; text-align:center; }
   .btn-signout {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--text-muted);
-    border-radius: 8px;
-    padding: 8px 18px;
-    font-family: var(--sans);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
+    background:none; border:1px solid var(--border); color:var(--text-muted);
+    border-radius:8px; padding:8px 18px; font-family:var(--sans);
+    font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s;
   }
-
-  .btn-signout:hover {
-    border-color: var(--text-muted);
-    color: var(--text);
-  }
-
-  .divider {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 2rem 0;
-  }
-
-  .footer-note {
-    font-size: 11px;
-    color: var(--text-muted);
-    font-family: var(--mono);
-    text-align: center;
-    line-height: 1.6;
-    opacity: 0.6;
-  }
-
-  .highlight-box {
-    background: var(--accent-glow);
-    border: 1px solid rgba(0,120,212,0.2);
-    border-radius: 8px;
-    padding: 10px 14px;
-    margin-bottom: 1.5rem;
-    font-size: 12px;
-    font-family: var(--mono);
-    color: var(--accent-bright);
-    line-height: 1.6;
-  }
+  .btn-signout:hover { border-color:var(--text-muted); color:var(--text); }
+  .divider { border:none; border-top:1px solid var(--border); margin:2rem 0; }
+  .footer-note { font-size:11px; color:var(--text-muted); font-family:var(--mono); text-align:center; line-height:1.6; opacity:0.6; }
 </style>
 </head>
 <body>
-
 <div class="card">
   <div class="logo-row">
     <div class="logo-badge">MP</div>
     <div class="logo-name">Manage Protect</div>
   </div>
-
   <h1>Microsoft Tenant Lookup</h1>
   <p class="subtitle">Sign in with your Microsoft 365 account to retrieve your tenant details instantly.</p>
-
-  <div class="highlight-box" style="display:none">
-    ⚙️ &nbsp;Replace <strong>bf1f0edd-ceb1-457e-8042-428481a2fca8</strong> in the script below with your Azure App (Client) ID before distributing.
-  </div>
-
-  <div class="config-row" style="display:none">
-    <label class="config-label" for="clientIdInput">Azure App (Client) ID</label>
-    <input
-      class="config-input"
-      id="clientIdInput"
-      type="text"
-      placeholder="e.g. xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-      value="bf1f0edd-ceb1-457e-8042-428481a2fca8"
-    />
-  </div>
 
   <button class="btn-signin" id="signInBtn" onclick="signIn()">
     <svg class="ms-icon" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
@@ -462,23 +185,23 @@
       <div class="result-item">
         <div class="result-label">Tenant ID</div>
         <div class="result-value" id="tenantId">—</div>
-        <button class="copy-btn" onclick="copyField('tenantId', this)">copy</button>
+        <button class="copy-btn" onclick="copyField('tenantId',this)">copy</button>
       </div>
       <div class="result-item">
         <div class="result-label">Company Name</div>
         <div class="result-value" id="companyName">—</div>
-        <button class="copy-btn" onclick="copyField('companyName', this)">copy</button>
+        <button class="copy-btn" onclick="copyField('companyName',this)">copy</button>
       </div>
       <div class="result-item">
         <div class="result-label">Primary Domain</div>
         <div class="result-value" id="primaryDomain">—</div>
-        <button class="copy-btn" onclick="copyField('primaryDomain', this)">copy</button>
+        <button class="copy-btn" onclick="copyField('primaryDomain',this)">copy</button>
       </div>
     </div>
   </div>
 
   <div id="signout-row">
-    <button class="btn-signout" onclick="signOut()">← Sign out / look up another tenant</button>
+    <button class="btn-signout" onclick="resetPage()">← Sign out / look up another tenant</button>
   </div>
 
   <hr class="divider">
@@ -486,53 +209,37 @@
 </div>
 
 <script>
-  let msalInstance = null;
-
-  function getMsalInstance() {
-    const clientId = 'bf1f0edd-ceb1-457e-8042-428481a2fca8';
-    if (!clientId) {
-      showError('Client ID is missing. Please contact Manage Protect.');
-      return null;
-    }
-    const config = {
-      auth: {
-        clientId: clientId,
-        authority: 'https://login.microsoftonline.com/organizations',
-        redirectUri: window.location.href.split('?')[0].split('#')[0],
-      },
-      cache: { cacheLocation: 'sessionStorage' }
-    };
-    return new msal.PublicClientApplication(config);
-  }
-
-  const CLIENT_ID = 'bf1f0edd-ceb1-457e-8042-428481a2fca8';
-  const SCOPES = ['User.Read', 'Organization.Read.All'];
+  var CLIENT_ID = 'bf1f0edd-ceb1-457e-8042-428481a2fca8';
+  var SCOPES    = ['User.Read', 'Organization.Read.All'];
+  var REDIRECT  = window.location.origin + window.location.pathname;
 
   function buildMsal() {
     return new msal.PublicClientApplication({
       auth: {
         clientId: CLIENT_ID,
         authority: 'https://login.microsoftonline.com/organizations',
-        redirectUri: window.location.origin + window.location.pathname,
-        navigateToLoginRequestUrl: true,
+        redirectUri: REDIRECT,
+        navigateToLoginRequestUrl: true
       },
-      cache: { cacheLocation: 'sessionStorage', storeAuthStateInCookie: true }
+      cache: {
+        cacheLocation: 'sessionStorage',
+        storeAuthStateInCookie: true
+      }
     });
   }
 
-  // Handle redirect response on page load
-  window.addEventListener('load', async () => {
+  // On page load — handle the redirect coming back from Microsoft
+  window.addEventListener('load', async function() {
     try {
-      const instance = buildMsal();
+      var instance = buildMsal();
       await instance.initialize();
-      const result = await instance.handleRedirectPromise();
+      var result = await instance.handleRedirectPromise();
       if (result && result.account) {
-        msalInstance = instance;
         setLoading(true);
         await fetchOrgData(instance, result.account);
       }
-    } catch (e) {
-      showError('Sign-in error: ' + (e.message || e.errorCode || 'Unknown'));
+    } catch(e) {
+      showError('Sign-in error: ' + (e.message || e.errorCode || String(e)));
       setLoading(false);
     }
   });
@@ -541,101 +248,74 @@
     hideError();
     setLoading(true);
     try {
-      const instance = buildMsal();
-      msalInstance = instance;
+      var instance = buildMsal();
       await instance.initialize();
-      await instance.loginRedirect({
-        scopes: SCOPES,
-        prompt: 'select_account'
-      });
-      // Page will redirect — execution stops here
-    } catch (err) {
-      showError('Sign-in failed: ' + (err.message || err.errorCode || 'Unknown error'));
+      await instance.loginRedirect({ scopes: SCOPES, prompt: 'select_account' });
+      // browser navigates away — nothing after this runs
+    } catch(e) {
+      showError('Could not start sign-in: ' + (e.message || e.errorCode || String(e)));
       setLoading(false);
     }
   }
 
   async function fetchOrgData(instance, account) {
     try {
-      const tokenResponse = await instance.acquireTokenSilent({
-        scopes: SCOPES,
-        account: account
+      var token = await instance.acquireTokenSilent({ scopes: SCOPES, account: account });
+      var resp  = await fetch('https://graph.microsoft.com/v1.0/organization', {
+        headers: { 'Authorization': 'Bearer ' + token.accessToken }
       });
-
-      const orgResponse = await fetch('https://graph.microsoft.com/v1.0/organization', {
-        headers: { Authorization: `Bearer ${tokenResponse.accessToken}` }
-      });
-
-      if (!orgResponse.ok) {
-        const errData = await orgResponse.json().catch(() => ({}));
-        throw new Error(errData?.error?.message || `Graph API error: ${orgResponse.status}`);
+      if (!resp.ok) {
+        var e = await resp.json().catch(function(){ return {}; });
+        throw new Error((e.error && e.error.message) || ('Graph API error ' + resp.status));
       }
+      var data = await resp.json();
+      var org  = data.value && data.value[0];
+      if (!org) throw new Error('No organisation data returned.');
 
-      const orgData = await orgResponse.json();
-      const org = orgData.value && orgData.value[0];
-      if (!org) throw new Error('No organisation data returned from Microsoft Graph.');
+      var tenantId     = org.id || account.tenantId;
+      var companyName  = org.displayName || '—';
+      var domains      = org.verifiedDomains || [];
+      var def          = domains.find(function(d){ return d.isDefault && d.type === 'Managed'; })
+                      || domains.find(function(d){ return d.isDefault; })
+                      || domains[0];
+      var primaryDomain = def ? def.name : '—';
 
-      const tenantId = org.id || account.tenantId;
-      const companyName = org.displayName || '—';
-      const domains = org.verifiedDomains || [];
-      const defaultDomain = domains.find(d => d.isDefault && d.type === 'Managed')
-        || domains.find(d => d.isDefault)
-        || domains[0];
-      const primaryDomain = defaultDomain ? defaultDomain.name : '—';
-
-      displayResults(tenantId, companyName, primaryDomain);
-    } catch (err) {
-      showError('Failed to retrieve tenant data: ' + (err.message || 'Unknown error'));
+      document.getElementById('tenantId').textContent    = tenantId;
+      document.getElementById('companyName').textContent  = companyName;
+      document.getElementById('primaryDomain').textContent = primaryDomain;
+      document.getElementById('results').style.display    = 'block';
+      document.getElementById('signout-row').style.display = 'block';
+      document.getElementById('signInBtn').style.display  = 'none';
+    } catch(e) {
+      showError('Failed to retrieve tenant data: ' + (e.message || String(e)));
     } finally {
       setLoading(false);
     }
   }
 
-  function displayResults(tenantId, companyName, primaryDomain) {
-    document.getElementById('tenantId').textContent = tenantId;
-    document.getElementById('companyName').textContent = companyName;
-    document.getElementById('primaryDomain').textContent = primaryDomain;
-    document.getElementById('results').style.display = 'block';
-    document.getElementById('signout-row').style.display = 'block';
-    document.getElementById('signInBtn').style.display = 'none';
-    document.getElementById('clientIdInput').closest('.config-row').style.display = 'none';
-    document.querySelector('.highlight-box').style.display = 'none';
-  }
-
-  function signOut() {
-    document.getElementById('results').style.display = 'none';
+  function resetPage() {
+    document.getElementById('results').style.display     = 'none';
     document.getElementById('signout-row').style.display = 'none';
-    document.getElementById('signInBtn').style.display = 'flex';
-    document.getElementById('clientIdInput').closest('.config-row').style.display = 'block';
-    document.querySelector('.highlight-box').style.display = 'block';
+    document.getElementById('signInBtn').style.display   = 'flex';
     hideError();
-    if (msalInstance) {
-      try { msalInstance.clearCache(); } catch(e) {}
-    }
+    sessionStorage.clear();
   }
 
   function setLoading(on) {
-    const btn = document.getElementById('signInBtn');
+    var btn = document.getElementById('signInBtn');
     if (on) {
       btn.disabled = true;
-      btn.innerHTML = '<div class="spinner"></div> Signing in...';
+      btn.innerHTML = '<div class="spinner"></div> Signing in\u2026';
     } else {
       btn.disabled = false;
-      btn.innerHTML = `
-        <svg class="ms-icon" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
-          <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
-          <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
-          <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
-          <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
-        </svg>
-        Sign in with Microsoft`;
+      btn.innerHTML = '<svg class="ms-icon" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>Sign in with Microsoft';
     }
   }
 
   function showError(msg) {
-    const box = document.getElementById('error-box');
-    box.textContent = '⚠ ' + msg;
-    box.style.display = 'block';
+    var b = document.getElementById('error-box');
+    b.textContent = '\u26a0 ' + msg;
+    b.style.display = 'block';
   }
 
   function hideError() {
@@ -643,12 +323,12 @@
   }
 
   async function copyField(id, btn) {
-    const text = document.getElementById(id).textContent;
+    var text = document.getElementById(id).textContent;
     try {
       await navigator.clipboard.writeText(text);
       btn.textContent = 'copied!';
       btn.classList.add('copied');
-      setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 2000);
+      setTimeout(function(){ btn.textContent = 'copy'; btn.classList.remove('copied'); }, 2000);
     } catch(e) {}
   }
 </script>
